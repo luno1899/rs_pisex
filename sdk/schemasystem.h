@@ -1,5 +1,5 @@
-#ifndef SCHEMASYSTEM_H
-#define SCHEMASYSTEM_H
+#ifndef RS_SCHEMASYSTEM_H
+#define RS_SCHEMASYSTEM_H
 #ifdef _WIN32
 #pragma once
 #endif
@@ -27,4 +27,4 @@ int32_t GetServerOffset(const char* pszClassName, const char* pszPropName);
         return *reinterpret_cast<std::add_pointer_t<type>>(reinterpret_cast<intptr_t>(this) + offset); \
     }
 
-#endif //SCHEMASYSTEM_H
+#endif //RS_SCHEMASYSTEM_H
