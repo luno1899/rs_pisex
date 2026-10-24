@@ -2,12 +2,12 @@
 #include "utils.hpp"
 #include <cstring>
 
-void CSchemaSystemTypeScope::FindDeclaredClass(SchemaClassInfoData_t*& pClassInfo, const char* pszClassName)
+void CSchemaSystemTypeScope::FindDeclaredClass(RS_SchemaClassInfoData_t*& pClassInfo, const char* pszClassName)
 {
 #if defined _WIN32 && _M_X64
-    CallVFunc<void, 2, SchemaClassInfoData_t*&, const char*>(this, pClassInfo, pszClassName);
+    CallVFunc<void, 2, RS_SchemaClassInfoData_t*&, const char*>(this, pClassInfo, pszClassName);
 #else
-    pClassInfo = CallVFunc<SchemaClassInfoData_t*, 2, const char*>(this, pszClassName);
+    pClassInfo = CallVFunc<RS_SchemaClassInfoData_t*, 2, const char*>(this, pszClassName);
 #endif
 }
 
@@ -25,7 +25,7 @@ CSchemaSystemTypeScope* CSchemaSystem::GetServerTypeScope()
 
 int32_t CSchemaSystem::GetServerOffset(const char* pszClassName, const char* pszPropName)
 {
-    SchemaClassInfoData_t* pClassInfo = nullptr;
+    RS_SchemaClassInfoData_t* pClassInfo = nullptr;
     GetServerTypeScope()->FindDeclaredClass(pClassInfo, pszClassName);
     if (pClassInfo)
     {

@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <type_traits>
 
-struct SchemaClassFieldData_t
+struct RS_SchemaClassFieldData_t
 {
     const char* m_pszName; // 0x0000
     void* m_pSchemaType; // 0x0008
@@ -22,7 +22,7 @@ struct SchemaClassFieldData_t
     void* m_pMetaData; // 0x0018
 };
 
-struct SchemaClassInfoData_t
+struct RS_SchemaClassInfoData_t
 {
     char pad_0x0000[0x8]; // 0x0000
 
@@ -38,13 +38,13 @@ struct SchemaClassInfoData_t
     int16_t m_iUnk2; // 0x0024
     int16_t m_iUnk3; // 0x0026
 
-    SchemaClassFieldData_t* m_pFieldsData; // 0x0028
+    RS_SchemaClassFieldData_t* m_pFieldsData; // 0x0028
 };
 
 class CSchemaSystemTypeScope
 {
 public:
-    void FindDeclaredClass(SchemaClassInfoData_t*& pClassInfo, const char* pszClassName);
+    void FindDeclaredClass(RS_SchemaClassInfoData_t*& pClassInfo, const char* pszClassName);
 };
 
 class CSchemaSystem

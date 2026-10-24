@@ -2,89 +2,68 @@ name: Build
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
-jobs:
-  build:
-    name: ${{ matrix.os_name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            os_name: linux
-          - os: windows-latest
-            os_name: windows
-    defaults:
-      run:
-        shell: bash
+permissions:
+  contents: read
 
+env:
+  # Metamod:Source 2.0.0-dev+1411 (plugin API 17:14, no KHook) - do not move to API 18.
+  METAMOD_COMMIT: 7ec0f16948ab3a0910a98b4ac10e1c0e360d5339
+  # Last alliedmodders/hl2sdk cs2 commit before 2025-10-18.
+  HL2SDK_COMMIT: 84a823db042b49d2f6934b770dafbf3a366cef26
+  AMBUILD_COMMIT: d89ec91a7ac2607da07b50bb62346f9a10e9a998
+  # Valve Steam Runtime 3 "sniper" SDK: the toolchain the CS2 dedicated server is built against.
+  STEAMRT_IMAGE: registry.gitlab.steamos.cloud/steamrt/sniper/sdk@sha256:2969e5a47146a6494c01d953cd818b1d62712f42f9e54c4809d7a3aa8dc276ce
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           path: plugin
 
-      - uses: actions/checkout@v4
-        with:
-          repository: alliedmodders/metamod-source
-          ref: 7ec0f16948ab3a0910a98b4ac10e1c0e360d5339 # Metamod:Source 2.0.0.1411
-          path: metamod-source
-
-      - uses: actions/checkout@v4
-        with:
-          repository: alliedmodders/hl2sdk
-          ref: 6d3193265c55fd25195683aecb74e6164fdd6c1f # Feb 2024 hl2sdk: plugin sdk/ headers need the old layout
-          path: hl2sdk-cs2
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install AMBuild
-        run: pip install git+https://github.com/alliedmodders/ambuild
-
-      - name: Install Linux dependencies
-        if: matrix.os_name == 'linux'
+      - name: Fetch Metamod:Source, HL2SDK and AMBuild (pinned)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
+          git clone --filter=blob:none https://github.com/alliedmodders/metamod-source.git metamod-source
+          git -C metamod-source checkout --detach "$METAMOD_COMMIT"
+          git -C metamod-source submodule update --init --recursive
+          git clone --filter=blob:none https://github.com/alliedmodders/hl2sdk.git hl2sdk-cs2
+          git -C hl2sdk-cs2 checkout --detach "$HL2SDK_COMMIT"
+          git clone --filter=blob:none https://github.com/alliedmodders/ambuild.git ambuild
+          git -C ambuild checkout --detach "$AMBUILD_COMMIT"
 
-      - name: Set up MSVC
-        if: matrix.os_name == 'windows'
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Build
-        working-directory: plugin
-        env:
-          CC: clang
-          CXX: clang++
+      - name: Build Linux (Steam Runtime 3, x64)
         run: |
-          [ "${{ matrix.os_name }}" = "windows" ] && unset CC CXX
-          mkdir build && cd build
-          set +e
-          {
-            python ../configure.py --enable-optimize --plugin-name=resetscore --plugin-alias=resetscore               --sdks cs2 --targets x86_64               --mms_path "$GITHUB_WORKSPACE/metamod-source"               --hl2sdk-root "$GITHUB_WORKSPACE"               --hl2sdk-manifests "$GITHUB_WORKSPACE/plugin/hl2sdk-manifests"             && ambuild
-          } > build.log 2>&1
-          rc=$?
-          cat build.log
-          if [ $rc -ne 0 ]; then
-            # surface the log tail as a public annotation
-            msg=$(grep -iE "error|fail|exception|traceback" build.log | head -30 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
-            echo "::error title=Build log::$msg"
-            exit $rc
+          set -o pipefail
+          cat > build-in-container.sh <<'INNER'
+          set -eu
+          export PYTHONPATH=/w/ambuild CC=clang CXX=clang++
+          cd /w/plugin
+          rm -rf build && mkdir build && cd build
+          python3 ../configure.py --enable-optimize --plugin-name=resetscore --plugin-alias=resetscore \
+            --sdks cs2 --targets x86_64 \
+            --mms_path /w/metamod-source \
+            --hl2sdk-root /w \
+            --hl2sdk-manifests /w/metamod-source/hl2sdk-manifests
+          python3 -c 'from ambuild2.run import cli_run; cli_run()'
+          INNER
+          if ! docker run --rm -v "$GITHUB_WORKSPACE:/w" "$STEAMRT_IMAGE" bash -lc "$(sed 's/^          //' build-in-container.sh)" 2>&1 | tee build.log; then
+            # Surface compiler/linker errors as one annotation so they are readable without the raw log.
+            msg=$(grep -E 'error:|undefined reference|Build failed|fatal error|Traceback|Error' build.log | grep -v ' -pipe ' | head -40 | sed 's/%/%25/g' | paste -sd '|' - | sed 's/|/%0A/g')
+            echo "::error title=Linux build errors::${msg}"
+            exit 1
           fi
 
-      - name: Add translations
-        working-directory: plugin
+      - name: Stage package
         run: |
-          mkdir -p build/package/addons/translations
-          cp translations/resetscore.phrases.txt build/package/addons/translations/
+          mkdir -p plugin/build/package/addons/translations
+          cp plugin/translations/resetscore.phrases.txt plugin/build/package/addons/translations/
+          find plugin/build/package -type f
 
       - uses: actions/upload-artifact@v4
         with:
-          name: resetscore-${{ matrix.os_name }}
+          name: resetscore-linux-x64
           path: plugin/build/package
+          if-no-files-found: error
