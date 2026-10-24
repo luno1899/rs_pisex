@@ -2,42 +2,26 @@
 #include "utils.hpp"
 #include <cstring>
 
-void CSchemaSystemTypeScope::FindDeclaredClass(RS_SchemaClassInfoData_t*& pClassInfo, const char* pszClassName)
+int32_t GetServerOffset(const char* pszClassName, const char* pszPropName)
 {
-#if defined _WIN32 && _M_X64
-    CallVFunc<void, 2, RS_SchemaClassInfoData_t*&, const char*>(this, pClassInfo, pszClassName);
-#else
-    pClassInfo = CallVFunc<RS_SchemaClassInfoData_t*, 2, const char*>(this, pszClassName);
-#endif
-}
+    if (!g_pCSchemaSystem)
+        return -1;
 
-CSchemaSystemTypeScope* CSchemaSystem::FindTypeScopeForModule(const char* szpModuleName)
-{
-    return CallVFunc<CSchemaSystemTypeScope*, 13, const char*, void*>(this, szpModuleName, nullptr);
-}
+    static CSchemaSystemTypeScope* pServerTypeScope = nullptr;
+    if (!pServerTypeScope)
+        pServerTypeScope = g_pCSchemaSystem->FindTypeScopeForModule(WIN_LINUX("server.dll", "libserver.so"));
+    if (!pServerTypeScope)
+        return -1;
 
-CSchemaSystemTypeScope* CSchemaSystem::GetServerTypeScope()
-{
-    static CSchemaSystemTypeScope* pServerTypeScope = FindTypeScopeForModule(WIN_LINUX("server.dll", "libserver.so"));
+    CSchemaClassInfo* pClassInfo = pServerTypeScope->FindDeclaredClass(pszClassName).Get();
+    if (!pClassInfo)
+        return -1;
 
-    return pServerTypeScope;
-}
-
-int32_t CSchemaSystem::GetServerOffset(const char* pszClassName, const char* pszPropName)
-{
-    RS_SchemaClassInfoData_t* pClassInfo = nullptr;
-    GetServerTypeScope()->FindDeclaredClass(pClassInfo, pszClassName);
-    if (pClassInfo)
+    for (int i = 0; i < pClassInfo->m_nFieldCount; i++)
     {
-        for (int i = 0; i < pClassInfo->m_iFieldsCount; i++)
-        {
-            auto& pFieldData = pClassInfo->m_pFieldsData[i];
-
-            if (std::strcmp(pFieldData.m_pszName, pszPropName) == 0)
-            {
-                return pFieldData.m_iOffset;
-            }
-        }
+        auto& field = pClassInfo->m_pFields[i];
+        if (std::strcmp(field.m_pszName, pszPropName) == 0)
+            return field.m_nSingleInheritanceOffset;
     }
 
     return -1;

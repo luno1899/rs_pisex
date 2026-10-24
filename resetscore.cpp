@@ -11,7 +11,7 @@ INetworkGameServer *g_pNetworkGameServer = nullptr;
 IGameResourceService* g_pGameResourceService = nullptr;
 CGameEntitySystem* g_pGameEntitySystem = nullptr;
 CEntitySystem* g_pEntitySystem = nullptr;
-CSchemaSystem* g_pCSchemaSystem = nullptr;
+ISchemaSystem* g_pCSchemaSystem = nullptr;
 CGlobalVars *gpGlobals = nullptr;
 
 std::map<std::string, std::string> g_vecPhrases;
@@ -93,7 +93,7 @@ bool RS::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool late)
 	PLUGIN_SAVEVARS();
 
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pCVar, ICvar, CVAR_INTERFACE_VERSION);
-	GET_V_IFACE_ANY(GetEngineFactory, g_pCSchemaSystem, CSchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
+	GET_V_IFACE_ANY(GetEngineFactory, g_pCSchemaSystem, ISchemaSystem, SCHEMASYSTEM_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetFileSystemFactory, g_pFullFileSystem, IFileSystem, FILESYSTEM_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, engine, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
