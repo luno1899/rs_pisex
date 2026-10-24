@@ -2,12 +2,6 @@
 #include "CCSPlayerPawnBase.h"
 #include "schemasystem.h"
 
-struct GameTime_t
-{
-public:
-	float m_Value; // 0x0	
-};
-
 class CCSPlayerPawn : public CCSPlayerPawnBase
 {
 public:

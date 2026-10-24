@@ -10,15 +10,6 @@ class CNetworkTransmitComponent {};
 // a CEntityInstance-derived base for its schema accessors.
 class CBaseEntity : public CEntityInstance {};
 
-enum LifeState_t : uint8_t
-{
-	LIFE_ALIVE = 0,
-	LIFE_DYING,
-	LIFE_DEAD,
-	LIFE_RESPAWNABLE,
-	LIFE_RESPAWNING
-};
-
 class SC_CBaseEntity : public CBaseEntity
 {
 public:

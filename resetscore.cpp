@@ -8,7 +8,7 @@ PLUGIN_EXPOSE(RS, g_RS);
 IVEngineServer2* engine = nullptr;
 IGameEventManager2* gameeventmanager = nullptr;
 INetworkGameServer *g_pNetworkGameServer = nullptr;
-IGameResourceServiceServer* g_pGameResourceService = nullptr;
+IGameResourceService* g_pGameResourceService = nullptr;
 CGameEntitySystem* g_pGameEntitySystem = nullptr;
 CEntitySystem* g_pEntitySystem = nullptr;
 CSchemaSystem* g_pCSchemaSystem = nullptr;
@@ -39,7 +39,7 @@ void ClientPrint(int iSlot, const char *msg, ...)
 bool OnRsCommand(int iSlot, const char* szContent)
 {
 	ClientPrint(iSlot, g_vecPhrases[std::string("Success")].c_str());
-	auto pController = (CCSPlayerController*)g_pEntitySystem->GetBaseEntity((CEntityIndex)(iSlot + 1));
+	auto pController = (CCSPlayerController*)g_pEntitySystem->GetEntityInstance((CEntityIndex)(iSlot + 1));
 	CCSPlayerController_ActionTrackingServices* m_ATS = pController->m_pActionTrackingServices();
 	pController->m_iScore() = 0;
 	pController->m_iMVPs() = 0;
@@ -99,7 +99,7 @@ bool RS::Load(PluginId id, ISmmAPI* ismm, char* error, size_t maxlen, bool late)
 	GET_V_IFACE_CURRENT(GetServerFactory, g_pSource2Server, ISource2Server, SOURCE2SERVER_INTERFACE_VERSION);
 	GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameClients, IServerGameClients, SOURCE2GAMECLIENTS_INTERFACE_VERSION);
 	GET_V_IFACE_CURRENT(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
-	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceService, IGameResourceServiceServer, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
+	GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceService, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
 	
 	KeyValues::AutoDelete g_kvPhrases("Phrases");
 	const char *pszPath = "addons/translations/resetscore.phrases.txt";
