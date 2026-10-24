@@ -56,7 +56,11 @@ bool OnRsCommand(int iSlot, const char* szContent)
 	m_ATS->m_matchStats().m_iCashEarned() = 0;
 	m_ATS->m_matchStats().m_iUtilityDamage() = 0;
 	m_ATS->m_matchStats().m_iEnemiesFlashed() = 0;
-	g_pUtils->SetStateChanged(pController, "CCSPlayerController", "m_pInventoryServices");
+	// Notify only the fields that were actually changed. Marking m_pInventoryServices
+	// as changed re-sends m_unMusicID to the client, which replays the MVP music kit.
+	g_pUtils->SetStateChanged(pController, "CCSPlayerController", "m_iScore");
+	g_pUtils->SetStateChanged(pController, "CCSPlayerController", "m_iMVPs");
+	g_pUtils->SetStateChanged(pController, "CCSPlayerController", "m_pActionTrackingServices");
 	return false;
 }
 

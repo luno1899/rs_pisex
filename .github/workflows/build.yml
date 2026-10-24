@@ -1,0 +1,83 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            os_name: linux
+          - os: windows-latest
+            os_name: windows
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - uses: actions/checkout@v4
+        with:
+          repository: alliedmodders/metamod-source
+          path: metamod-source
+
+      - uses: actions/checkout@v4
+        with:
+          repository: alliedmodders/hl2sdk
+          ref: cs2
+          path: hl2sdk-cs2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install AMBuild
+        run: pip install git+https://github.com/alliedmodders/ambuild
+
+      - name: Install Linux dependencies
+        if: matrix.os_name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Set up MSVC
+        if: matrix.os_name == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build
+        working-directory: plugin
+        env:
+          CC: clang
+          CXX: clang++
+        run: |
+          [ "${{ matrix.os_name }}" = "windows" ] && unset CC CXX
+          mkdir build && cd build
+          python ../configure.py --enable-optimize --plugin-name=resetscore --plugin-alias=resetscore \
+            --sdks cs2 --targets x86_64 \
+            --mms_path "$GITHUB_WORKSPACE/metamod-source" \
+            --hl2sdk-root "$GITHUB_WORKSPACE" \
+            --hl2sdk-manifests ../hl2sdk-manifests
+          ambuild
+
+      - name: Add translations
+        working-directory: plugin
+        run: |
+          mkdir -p build/package/addons/translations
+          cp translations/resetscore.phrases.txt build/package/addons/translations/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: resetscore-${{ matrix.os_name }}
+          path: plugin/build/package
