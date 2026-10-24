@@ -66,7 +66,7 @@ jobs:
           mkdir build && cd build
           set +e
           {
-            python ../configure.py --enable-optimize --plugin-name=resetscore --plugin-alias=resetscore               --sdks cs2 --targets x86_64               --mms_path "$GITHUB_WORKSPACE/metamod-source"               --hl2sdk-root "$GITHUB_WORKSPACE"               --hl2sdk-manifests ../hl2sdk-manifests             && ambuild
+            python ../configure.py --enable-optimize --plugin-name=resetscore --plugin-alias=resetscore               --sdks cs2 --targets x86_64               --mms_path "$GITHUB_WORKSPACE/metamod-source"               --hl2sdk-root "$GITHUB_WORKSPACE"               --hl2sdk-manifests "$GITHUB_WORKSPACE/plugin/hl2sdk-manifests"             && ambuild
           } > build.log 2>&1
           rc=$?
           cat build.log
