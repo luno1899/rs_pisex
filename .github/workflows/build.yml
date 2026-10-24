@@ -29,13 +29,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: alliedmodders/metamod-source
-          ref: 37408219baae58539c7298e9a30227bb65ae3679
+          ref: 7ec0f16948ab3a0910a98b4ac10e1c0e360d5339 # Metamod:Source 2.0.0.1411
           path: metamod-source
 
       - uses: actions/checkout@v4
         with:
           repository: alliedmodders/hl2sdk
-          ref: 6d3193265c55fd25195683aecb74e6164fdd6c1f
+          ref: bd17582be4bc18970e4fe4c518359872fda8276d
           path: hl2sdk-cs2
 
       - uses: actions/setup-python@v5

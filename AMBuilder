@@ -30,7 +30,6 @@ for sdk_target in MMSPlugin.sdk_targets:
     if sdk_target in ['dota', 'cs2']:
       binary.sources += [
       os.path.join(sdk.path, 'tier1', 'convar.cpp'),
-      os.path.join(sdk.path, 'tier1', 'generichash.cpp'),
       os.path.join(sdk.path, 'entity2', 'entitysystem.cpp'),
       os.path.join(sdk.path, 'entity2', 'entityidentity.cpp'),
       os.path.join(sdk.path, 'public', 'tier0', 'memoverride.cpp')
