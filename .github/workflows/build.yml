@@ -58,6 +58,8 @@ jobs:
 
       - name: Stage package
         run: |
+          # the container built as root
+          sudo chown -R "$(id -u):$(id -g)" plugin/build
           mkdir -p plugin/build/package/addons/translations
           cp plugin/translations/resetscore.phrases.txt plugin/build/package/addons/translations/
           find plugin/build/package -type f
